@@ -1,0 +1,32 @@
+{
+    "build": {
+        "cmd": "bun run build:bundle"
+    },
+    "files": [
+        "dist",
+        "package.json",
+        "README.md"
+    ],
+    "output": {
+        "name": "my-app-release",
+        "dir": "./releases"
+    },
+    "linux": {
+        "format": [
+            "zip",
+            "tar.gz",
+            "tar.xz",
+            "7z"
+        ]
+    },
+    "win32": {
+        "format": [
+            "zip"
+        ]
+    },
+    "darwin": {
+        "format": [
+            "zip"
+        ]
+    }
+}
