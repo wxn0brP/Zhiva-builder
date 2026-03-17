@@ -1,12 +1,13 @@
-import type { Build } from "bun";
+import { type Build } from "bun";
 import { execSync } from "child_process";
+import { copyFileSync } from "fs";
 import { join } from "path";
+import { createArchives } from "./archive";
+import { checkEngines, getEngineFilePath } from "./engine";
+import { createFpmPackages } from "./fpm";
 import { Config, Os } from "./types";
 import { copyFiles } from "./utils";
 import { packageJson, zhivaConfig } from "./vars";
-import { createArchives } from "./archive";
-import { checkEngines, getEngineFilePath } from "./engine";
-import { copyFileSync } from "fs";
 
 export async function build(config: Config, positionals: string[]) {
     if (config.build.cmd) {
@@ -20,6 +21,9 @@ export async function build(config: Config, positionals: string[]) {
     if (config.linux) await buildForSystem(config, "linux");
     if (config.win32) await buildForSystem(config, "win32");
     if (config.darwin) await buildForSystem(config, "darwin");
+
+    if (config.linux?.fpm && !config.noFpm)
+        createFpmPackages(config);
 }
 
 async function buildForSystem(config: Config, os: Os) {

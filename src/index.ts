@@ -22,6 +22,9 @@ const { values, positionals } = parseArgs({
         },
         noArchive: {
             type: "boolean"
+        },
+        noFpm: {
+            type: "boolean"
         }
     }
 });
@@ -38,9 +41,11 @@ if (values.target) {
     if (!systems.includes("darwin")) delete config.darwin;
 }
 
-if (values.noArchive) {
+if (values.noArchive)
     config.noArchive = true;
-}
+
+if (values.noFpm)
+    config.noFpm = true;
 
 const { build } = await import("./build");
 build(config, positionals);

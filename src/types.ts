@@ -1,9 +1,14 @@
 export type Os = "win32" | "darwin" | "linux";
 export type Format = "zip" | "tar.gz" | "tar.xz" | "7z";
+export type FpmFormat = "deb" | "rpm" | "pacman";
 
 export interface OsConfig {
     format: Format[];
     cmd?: string;
+}
+
+export interface LinuxConfig extends OsConfig {
+    fpm: FpmFormat[];
 }
 
 export interface Config {
@@ -15,12 +20,13 @@ export interface Config {
         name: string;
         dir: string;
     };
-    linux: OsConfig;
+    linux: LinuxConfig;
     win32: OsConfig;
     darwin: OsConfig;
 
     // internal
     noArchive: boolean;
+    noFpm: boolean;
 }
 
 export interface ZhivaConfig {

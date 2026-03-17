@@ -17,6 +17,11 @@
             "tar.gz",
             "tar.xz",
             "7z"
+        ],
+        "fpm": [
+            "pacman",
+            "deb",
+            "rpm"
         ]
     },
     "win32": {
