@@ -2,26 +2,24 @@
 
 Zhiva app builder and packager.
 
-## Usage
+## Installation
 
 ```bash
-bun src/index.ts [options]
+ingr Zhiva-builder
+```
+
+or
+
+```bash
+git clone https://github.com/wxn0brP/Zhiva-builder.git
+cd Zhiva-builder
+bun install
+# Add to $PATH the src/index.ts file as zhiva-builder.
 ```
 
 ### Options
 
-- `-h, --help` - Show help
-- `-c, --config <path>` - Config file (default: `zhiva-builder.json`)
-- `-t, --target <systems>` - Target platforms: `linux`, `win`, `darwin` (comma-separated)
-- `--no-archive` - Skip archive creation
-
-### Examples
-
-```bash
-bun src/index.ts ./my-app
-bun src/index.ts -c custom-config.json ./my-app
-bun src/index.ts -t linux,win ./my-app
-```
+[Zhiva Builder Help](https://github.com/wxn0brP/Zhiva-builder/blob/master/src/help.ts)
 
 ## Config
 
