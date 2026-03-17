@@ -8,7 +8,7 @@ export interface OsConfig {
 }
 
 export interface LinuxConfig extends OsConfig {
-    fpm: FpmFormat[];
+    fpm?: FpmFormat[];
 }
 
 export interface Config {

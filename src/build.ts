@@ -25,7 +25,7 @@ export async function build(config: Config, positionals: string[]) {
     if (config.win32) await buildForSystem(config, "win32");
     if (config.darwin) await buildForSystem(config, "darwin");
 
-    if (config.linux?.fpm && !config.noFpm)
+    if (config.linux?.fpm?.length && !config.noFpm)
         createFpmPackages(config);
 
     log(LogLevel.CRITICAL, "02-03", "Build process completed");
