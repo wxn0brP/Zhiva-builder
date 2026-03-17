@@ -5,12 +5,15 @@ import { join } from "path";
 import { createArchives } from "./archive";
 import { checkEngines, getEngineFilePath } from "./engine";
 import { createFpmPackages } from "./fpm";
-import { Config, Os } from "./types";
-import { copyFiles } from "./utils";
+import { Config, LogLevel, Os } from "./types";
+import { copyFiles, log } from "./utils";
 import { packageJson, zhivaConfig } from "./vars";
 
 export async function build(config: Config, positionals: string[]) {
+    log(LogLevel.CRITICAL, "02-01", "Starting build process...");
+
     if (config.build.cmd) {
+        log(LogLevel.INFO, "02-02", `Running build command: ${config.build.cmd}`);
         execSync(config.build.cmd, {
             shell: "bash",
         });
@@ -24,11 +27,16 @@ export async function build(config: Config, positionals: string[]) {
 
     if (config.linux?.fpm && !config.noFpm)
         createFpmPackages(config);
+
+    log(LogLevel.CRITICAL, "02-03", "Build process completed");
 }
 
 async function buildForSystem(config: Config, os: Os) {
+    log(LogLevel.CRITICAL, "02-04", `Building for ${os}...`);
+
     const tempDir = join(config.output.dir, os, config.output.name);
 
+    log(LogLevel.DEBUG, "02-05", `Copying files to ${tempDir}`);
     await copyFiles(config.files, tempDir);
     await copyFiles(
         [join("node_modules", "@wxn0brp", "zhiva-base-lib", "assets")],
@@ -38,6 +46,7 @@ async function buildForSystem(config: Config, os: Os) {
     const osConfig = config[os];
 
     if (osConfig.cmd) {
+        log(LogLevel.INFO, "02-06", `Running ${os} command: ${osConfig.cmd}`);
         execSync(osConfig.cmd, {
             shell: "bash",
         });
@@ -46,10 +55,13 @@ async function buildForSystem(config: Config, os: Os) {
     await buildBin(config, tempDir, os);
 
     const zhivaEnginePath = getEngineFilePath(config, os);
+    log(LogLevel.DEBUG, "02-07", `Copying Zhiva engine to ${tempDir}`);
     copyFileSync(zhivaEnginePath, join(tempDir, `zhiva${os === "win32" ? ".exe" : ""}`));
 
     if (!config.noArchive)
         createArchives(tempDir, osConfig.format, os, config.output.name);
+
+    log(LogLevel.CRITICAL, "02-08", `Build for ${os} completed`);
 }
 
 const binExt = {
@@ -70,6 +82,8 @@ async function buildBin(config: Config, tempDir: string, os: Os) {
         zhivaConfig.name.replace(" ", "-") + binExt[os],
     );
 
+    log(LogLevel.INFO, "02-09", `Building binary for ${os}: ${bin}`);
+
     await Bun.build({
         entrypoints: [packageJson.main],
         compile: {
@@ -85,4 +99,6 @@ async function buildBin(config: Config, tempDir: string, os: Os) {
             "process.env.ZHIVA_ASSETS": "./assets"
         }
     });
+
+    log(LogLevel.INFO, "02-10", `Binary built successfully: ${bin}`);
 }

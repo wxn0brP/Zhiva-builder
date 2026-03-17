@@ -33,3 +33,15 @@ export interface ZhivaConfig {
     name: string;
     main: string;
 }
+
+export enum LogLevel {
+    CRITICAL = 0,
+    IMPORTANT = 1,
+    INFO = 2,
+    DEBUG = 3
+}
+
+export type LevelConfig = Record<LogLevel, {
+    color: string;
+    emoji?: string;
+}>;

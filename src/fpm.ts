@@ -1,7 +1,8 @@
 import { execSync } from "child_process";
 import { existsSync, mkdirSync } from "fs";
 import { join } from "path";
-import { Config, FpmFormat } from "./types";
+import { Config, FpmFormat, LogLevel } from "./types";
+import { log } from "./utils";
 
 function createFpmPackage(config: Config, rootDir: string, format: FpmFormat) {
     const { name: appName, dir: releasesDir } = config.output;
@@ -10,7 +11,7 @@ function createFpmPackage(config: Config, rootDir: string, format: FpmFormat) {
 
     const cmd = `fpm -s dir -t ${format} -n ${appName} -p ${output} ${rootDir}=/opt/zhiva`;
 
-    console.log(`[Z-BLD-06-01] Run fpm:`, cmd);
+    log(LogLevel.DEBUG, "06-01", `Run fpm: ${cmd}`);
 
     execSync(cmd, {
         shell: "bash"
@@ -27,6 +28,8 @@ function getFileExtension(format: FpmFormat) {
 }
 
 export function createFpmPackages(config: Config) {
+    log(LogLevel.IMPORTANT, "06-02", "Starting FPM package creation...");
+
     const rootDir = join(config.output.dir, "linux", config.output.name);
 
     const archiveDir = join(config.output.dir, "archives");
@@ -35,4 +38,6 @@ export function createFpmPackages(config: Config) {
 
     for (const format of config.linux.fpm)
         createFpmPackage(config, rootDir, format);
+
+    log(LogLevel.IMPORTANT, "06-03", "FPM package creation completed");
 }

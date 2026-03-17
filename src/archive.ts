@@ -1,7 +1,8 @@
 import { execSync } from "child_process";
 import { existsSync, mkdirSync } from "fs";
 import { join, resolve } from "path";
-import { Format } from "./types";
+import { Format, LogLevel } from "./types";
+import { log } from "./utils";
 
 export function createArchive(tempDir: string, type: Format, destDir: string, appName: string, os: string) {
     const out = join(resolve(destDir), appName + "-" + os + "." + type);
@@ -22,7 +23,7 @@ export function createArchive(tempDir: string, type: Format, destDir: string, ap
             break;
     }
 
-    console.log(`[Z-BLD-03-01] Run:`, cmd);
+    log(LogLevel.DEBUG, "03-01", `Run: ${cmd}`);
 
     execSync(cmd, {
         shell: "bash",
@@ -36,6 +37,8 @@ export function createArchives(
     os: string,
     appName: string
 ) {
+    log(LogLevel.IMPORTANT, "03-02", `Creating archives for ${os}: ${formats.join(", ")}`);
+
     const archivesDir = join(tempDir, "..", "..", "archives");
 
     if (!existsSync(archivesDir))
@@ -43,4 +46,6 @@ export function createArchives(
 
     for (const format of formats)
         createArchive(tempDir, format, archivesDir, appName, os);
+
+    log(LogLevel.IMPORTANT, "03-03", `Archive creation completed for ${os}`);
 }
