@@ -1,5 +1,5 @@
 import { execSync } from "child_process";
-import { existsSync, mkdirSync } from "fs";
+import { existsSync, mkdirSync, unlinkSync } from "fs";
 import { join } from "path";
 import { Config, FpmFormat, LogLevel } from "./types";
 import { log } from "./utils";
@@ -8,6 +8,8 @@ function createFpmPackage(config: Config, rootDir: string, format: FpmFormat) {
     const { name: appName, dir: releasesDir } = config.output;
 
     const output = join(releasesDir, "archives", `${appName}.${getFileExtension(format)}`);
+    if (existsSync(output))
+        unlinkSync(output);
 
     const cmd = `fpm -s dir -t ${format} -n ${appName} -p ${output} ${rootDir}=/opt/zhiva`;
 
