@@ -46,7 +46,7 @@ if (values.target) {
 
     const fpmFormats = ["deb", "rpm", "pacman"];
     const archiveFormats = ["zip", "tar.gz", "tar.xz", "7z"];
-    const systems = ["win", "linux", "darwin"];
+    const systems = ["win32", "linux", "darwin"];
 
     const systemsCfg: Record<Os, (string | true)[]> = {
         win32: [],
