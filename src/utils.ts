@@ -1,5 +1,5 @@
 import { mkdir, cp } from "fs/promises";
-import { basename, join } from "path";
+import { join } from "path";
 import { LevelConfig, LogLevel } from "./types";
 
 const colors = {
@@ -43,6 +43,20 @@ export function logError(id: string, message: string, ...args: any[]) {
 export async function copyFiles(sources: string[], destDir: string) {
     await mkdir(destDir, { recursive: true });
     await Promise.all(
-        sources.map((src) => cp(src, join(destDir, basename(src)), { recursive: true }))
+        sources.map(async (src) => {
+            const colonIndex = src.indexOf(":");
+            let srcPath: string;
+            let destPath: string;
+
+            if (colonIndex !== -1) {
+                srcPath = src.substring(0, colonIndex);
+                destPath = join(destDir, src.substring(colonIndex + 1));
+            } else {
+                srcPath = src;
+                destPath = join(destDir, src);
+            }
+
+            await cp(srcPath, destPath, { recursive: true });
+        })
     );
 }

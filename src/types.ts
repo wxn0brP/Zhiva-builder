@@ -23,6 +23,7 @@ export interface Config {
     linux: LinuxConfig;
     win32: OsConfig;
     darwin: OsConfig;
+    define: Record<string, string>;
 
     // internal
     noArchive: boolean;

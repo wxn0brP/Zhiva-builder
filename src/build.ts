@@ -6,10 +6,10 @@ import { createArchives } from "./archive";
 import { checkEngines, getEngineFilePath } from "./engine";
 import { createFpmPackages } from "./fpm";
 import { Config, LogLevel, Os } from "./types";
-import { copyFiles, log } from "./utils";
+import { copyFiles, log, logError } from "./utils";
 import { packageJson, zhivaConfig } from "./vars";
 
-export async function build(config: Config, positionals: string[]) {
+export async function build(config: Config) {
     log(LogLevel.CRITICAL, "02-01", "Starting build process...");
 
     if (config.build.cmd) {
@@ -39,7 +39,7 @@ async function buildForSystem(config: Config, os: Os) {
     log(LogLevel.DEBUG, "02-05", `Copying files to ${tempDir}`);
     await copyFiles(config.files, tempDir);
     await copyFiles(
-        [join("node_modules", "@wxn0brp", "zhiva-base-lib", "assets")],
+        [join("node_modules", "@wxn0brp", "zhiva-base-lib", "assets") + ":assets"],
         tempDir
     );
 
@@ -90,14 +90,15 @@ async function buildBin(config: Config, tempDir: string, os: Os) {
             outfile: bin,
             target: binTarget[os]
         },
-        external: [
-            "assets",
-            ...config.files
-        ],
         define: {
             "process.env.ZHIVA_ROOT": "./",
-            "process.env.ZHIVA_ASSETS": "./assets"
+            "process.env.ZHIVA_ASSETS": "./assets",
+            "process.env.NODE_ENV": '"production"',
+            ...(config.define || {})
         }
+    }).catch(e => {
+        logError("02-09", `Error building binary for ${os}:`, e);
+        process.exit(1);
     });
 
     log(LogLevel.INFO, "02-10", `Binary built successfully: ${bin}`);

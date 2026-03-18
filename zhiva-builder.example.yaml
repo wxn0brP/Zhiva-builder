@@ -1,0 +1,45 @@
+# Command to execute before packaging
+build:
+    cmd: "bun run build"
+
+# Artifacts to include in the final distribution archive
+files:
+    - "dist"
+    - "package.json"
+    - "zhiva.json"
+    - "README.md"
+
+# Output configuration for the generated release files
+output:
+    name: "my-app-release"
+    dir: "./releases"
+
+# Compile-time constant replacement.
+# Maps directly to Bun.build({ define: {...}}).
+# Keys are replaced literally in the source code during compilation.
+define:
+    "process.env.TEST_ENV": "test"
+
+# Linux-specific packaging rules
+linux:
+    # Compressed archive formats to generate
+    format:
+        - "zip"
+        - "tar.gz"
+        - "tar.xz"
+        - "7z"
+    # System package formats to build via FPM (https://github.com/jordansissel/fpm)
+    fpm:
+        - "pacman"
+        - "deb"
+        - "rpm"
+
+# Windows-specific packaging rules
+win32:
+    format:
+        - "zip"
+
+# macOS-specific packaging rules
+darwin:
+    format:
+        - "zip"

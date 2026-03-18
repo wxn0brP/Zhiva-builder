@@ -5,8 +5,7 @@ import { parseArgs } from "util";
 import { Config, Format, LinuxConfig, LogLevel, Os, OsConfig } from "./types";
 import { log, logError } from "./utils";
 
-const { values, positionals } = parseArgs({
-    allowPositionals: true,
+const { values } = parseArgs({
     options: {
         help: {
             type: "boolean",
@@ -15,7 +14,7 @@ const { values, positionals } = parseArgs({
         config: {
             type: "string",
             short: "c",
-            default: "zhiva-builder.json"
+            default: "zhiva-builder.yaml"
         },
         target: {
             type: "string",
@@ -40,7 +39,7 @@ if (!existsSync(values.config)) {
     process.exit(1);
 }
 
-const config: Config = JSON.parse(readFileSync(values.config, "utf-8"));
+const config: Config = Bun.YAML.parse(readFileSync(values.config, "utf-8")) as any;
 
 if (values.target) {
     const targets = values.target.split(",");
@@ -97,6 +96,8 @@ if (values.target) {
             continue;
         }
 
+        if (osCfg.length === 1 && osCfg[0] === true) continue;
+
         const fpm = osCfg.filter((f) => fpmFormats.includes(f as string)) as Format[];
         const archive = osCfg.filter((f) => archiveFormats.includes(f as string)) as Format[];
 
@@ -118,4 +119,4 @@ if (values.noFpm) {
 }
 
 const { build } = await import("./build");
-build(config, positionals);
+build(config);
