@@ -1,21 +1,21 @@
 {
-    "name": "@wxn0brp/zhiva-builder",
-    "version": "0.0.1",
-    "main": "src/index.ts",
-    "bin": {
-        "zhiva-builder": "./src/index.ts"
-    },
-    "description": "Zhiva app builder and packager",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/wxn0brP/Zhiva-builder.git"
-    },
-    "homepage": "https://github.com/wxn0brP/Zhiva-builder",
-    "author": "wxn0brP",
-    "license": "MIT",
-    "type": "module",
-    "devDependencies": {
-        "@types/bun": "*",
-        "typescript": "*"
-    }
+	"name": "@wxn0brp/zhiva-builder",
+	"version": "0.0.1",
+	"main": "src/index.ts",
+	"bin": {
+		"zhiva-builder": "./src/index.ts"
+	},
+	"description": "Zhiva app builder and packager",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/wxn0brP/Zhiva-builder.git"
+	},
+	"homepage": "https://github.com/wxn0brP/Zhiva-builder",
+	"author": "wxn0brP",
+	"license": "MIT",
+	"type": "module",
+	"devDependencies": {
+		"@types/bun": "*",
+		"typescript": "^5"
+	}
 }
