@@ -1,0 +1,109 @@
+name: "Zhiva-builder"
+description: "Simple workflow for building and publishing zhiva apps"
+author: "wxn0brP"
+
+branding:
+  color: "purple"
+  icon: "hash"
+
+inputs:
+  GITHUB_TOKEN:
+    description: "GitHub token for publishing releases"
+    required: false
+
+  config:
+    description: "Path to config file"
+    required: false
+    default: "zhiva-builder.yaml"
+
+  tags:
+    description: "Publish to tag"
+    required: false
+    default: "true"
+
+  nightly:
+    description: "Publish to nightly ('false' or <tag name>)"
+    required: false
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Determine context
+      id: context
+      shell: bash
+      run: |
+        if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then
+          echo "is_tag=true" >> $GITHUB_OUTPUT
+          echo "ref_name=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+        else
+          echo "is_tag=false" >> $GITHUB_OUTPUT
+          echo "ref_name=$GITHUB_REF_NAME" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Decide build and publish target
+      id: decision
+      shell: bash
+      run: |
+        set -e
+
+        IS_TAG="${{ steps.context.outputs.is_tag }}"
+        REF_NAME="${{ steps.context.outputs.ref_name }}"
+        TAGS="${{ inputs.tags }}"
+        NIGHTLY="${{ inputs.nightly }}"
+
+        # normalize
+        [[ "$TAGS" == "true" ]] && TAGS=true || TAGS=false
+
+        BUILD=false
+        TAG=""
+
+        if [[ "$IS_TAG" == "true" ]]; then
+          if [[ "$TAGS" == "true" ]]; then
+            BUILD=true
+            TAG="$REF_NAME"
+          fi
+        else
+          if [[ "$NIGHTLY" != "false" ]]; then
+            BUILD=true
+            [[ "$NIGHTLY" == "true" ]] && TAG="nightly" || TAG="$NIGHTLY"
+          fi
+        fi
+
+        echo "build=$BUILD" >> $GITHUB_OUTPUT
+        echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+    - name: Setup Workflow
+      if: steps.decision.outputs.build == 'true'
+      shell: bash
+      run: |
+        cd $GITHUB_ACTION_PATH
+        bun install
+
+    - name: Run TS script with Bun
+      if: steps.decision.outputs.build == 'true'
+      shell: bash
+      id: zhiva-builder
+      run: bun $GITHUB_ACTION_PATH/src/index.ts -c ${{ inputs.config }}
+
+    - name: Create or update release
+      if: steps.decision.outputs.build == 'true'
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN || github.token }}
+        TAG: ${{ steps.decision.outputs.tag }}
+      run: |
+        set -e
+
+        echo "Publishing to tag: $TAG"
+
+        RELEASE_EXISTS=$(gh release view "$TAG" >/dev/null 2>&1 && echo "true" || echo "false")
+
+        if [[ "$RELEASE_EXISTS" == "false" ]]; then
+          gh release create "$TAG" ./releases/archives/* --title "$TAG" --notes "Auto release for $TAG"
+        else
+          gh release upload "$TAG" ./releases/archives/* --clobber
+        fi
