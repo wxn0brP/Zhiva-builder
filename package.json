@@ -16,6 +16,6 @@
 	"type": "module",
 	"devDependencies": {
 		"@types/bun": "*",
-		"typescript": "^5"
+		"typescript": "^6.0.0"
 	}
 }
