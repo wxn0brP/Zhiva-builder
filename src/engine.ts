@@ -10,7 +10,7 @@ const SERVER_VERSION_FILE = "zhiva.nv.txt";
 const fileNames: Record<Os, string> = {
     win32: "zhiva-win32.exe",
     linux: "zhiva-linux",
-    darwin: "zhiva-macos"
+    darwin: "zhiva-darwin"
 };
 
 export function getEngineFileName(os: Os): string {
@@ -34,12 +34,13 @@ async function downloadEngine(config: Config, os: Os, serverVersion: string): Pr
     const engineFilePath = getEngineFilePath(config, os);
     const engineFileName = getEngineFileName(os);
 
-    log(LogLevel.INFO, "05-02", `Downloading Zhiva for ${os}...`);
+    log(LogLevel.INFO, "05-20", `Downloading Zhiva for ${os}...`);
 
     const dir = join(config.output.dir, os);
     if (!existsSync(dir))
         mkdirSync(dir, { recursive: true });
 
+    log(LogLevel.DEBUG, "05-21", `Downloading ${baseLink}${engineFileName}`);
     await $`curl -L ${baseLink}${engineFileName} -o ${engineFilePath}`;
 
     if (os !== "win32")
@@ -48,7 +49,7 @@ async function downloadEngine(config: Config, os: Os, serverVersion: string): Pr
     const localVersionPath = getLocalVersionFilePath(config, os);
     writeFileSync(localVersionPath, serverVersion.trim(), "utf-8");
 
-    log(LogLevel.INFO, "05-03", `Zhiva for ${os} downloaded successfully (v${serverVersion.trim()})`);
+    log(LogLevel.INFO, "05-22", `Zhiva for ${os} downloaded successfully (v${serverVersion.trim()})`);
 }
 
 async function checkEngineForOS(
@@ -66,21 +67,21 @@ async function checkEngineForOS(
             : null;
 
         if (binaryExists && localVersion === serverVersion.trim()) {
-            log(LogLevel.INFO, "05-04", `Zhiva engine for ${os} is up to date (v${serverVersion.trim()})`);
+            log(LogLevel.INFO, "05-10", `Zhiva engine for ${os} is up to date (v${serverVersion.trim()})`);
             return true;
         }
 
         if (!binaryExists) {
-            log(LogLevel.INFO, "05-05", `Binary missing for ${os}, downloading...`);
+            log(LogLevel.INFO, "05-11", `Binary missing for ${os}, downloading...`);
         } else {
-            log(LogLevel.INFO, "05-06", `Version mismatch for ${os} (local: ${localVersion} ≠ server: ${serverVersion.trim()}), updating...`);
+            log(LogLevel.INFO, "05-12", `Version mismatch for ${os} (local: ${localVersion} != server: ${serverVersion.trim()}), updating...`);
         }
 
         await downloadEngine(config, os, serverVersion);
         return true;
 
     } catch (e) {
-        logError("05-01", `Error checking Zhiva for ${os}:`, e);
+        logError("05-13", `Error checking Zhiva for ${os}:`, e);
         return false;
     }
 }
@@ -92,14 +93,14 @@ export async function checkEngines(config: Config): Promise<void> {
     if (config.darwin) platforms.push("darwin");
 
     if (platforms.length === 0) {
-        log(LogLevel.INFO, "05-07", "No platforms enabled in config, skipping engine check");
+        log(LogLevel.INFO, "05-01", "No platforms enabled in config, skipping engine check");
         return;
     }
 
-    log(LogLevel.IMPORTANT, "05-08", `Checking Zhiva engines for: ${platforms.join(", ")}`);
+    log(LogLevel.IMPORTANT, "05-02", `Checking Zhiva engines for: ${platforms.join(", ")}`);
 
     try {
-        log(LogLevel.DEBUG, "05-10", "Fetching server version...");
+        log(LogLevel.DEBUG, "05-03", "Fetching server version...");
         const serverVersion = await fetch(baseLink + SERVER_VERSION_FILE)
             .then(res => {
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -107,20 +108,20 @@ export async function checkEngines(config: Config): Promise<void> {
             })
             .then(text => text.trim());
 
-        log(LogLevel.DEBUG, "05-11", `Server version: ${serverVersion}`);
+        log(LogLevel.DEBUG, "05-04", `Server version: ${serverVersion}`);
 
         for (const os of platforms)
             await checkEngineForOS(config, os, serverVersion);
 
-        log(LogLevel.CRITICAL, "05-09", "Engine check completed");
+        log(LogLevel.CRITICAL, "05-30", "Engine check completed");
 
     } catch (e) {
-        logError("05-12", "Failed to fetch server version:", e);
+        logError("05-31", "Failed to fetch server version:", e);
 
         for (const os of platforms) {
             const engineFilePath = getEngineFilePath(config, os);
             if (!existsSync(engineFilePath))
-                console.warn(`[Z-BLD-05-13] Cannot verify ${os}: server unreachable AND binary missing`);
+                console.warn(`[Z-BLD-05-32] Cannot verify ${os}: server unreachable AND binary missing`);
         }
     }
 }
