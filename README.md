@@ -11,6 +11,12 @@ ingr Zhiva-builder
 or
 
 ```bash
+bunx @wxn0brp/ing i Zhiva-builder
+```
+
+or
+
+```bash
 git clone https://github.com/wxn0brP/Zhiva-builder.git
 cd Zhiva-builder
 bun install

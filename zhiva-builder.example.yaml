@@ -14,11 +14,9 @@ output:
     name: "my-app-release"
     dir: "./releases"
 
-# Compile-time constant replacement.
-# Maps directly to Bun.build({ define: {...}}).
-# Keys are replaced literally in the source code during compilation.
-define:
-    "process.env.TEST_ENV": "test"
+# Environment variables to set
+env:
+    "TEST_ENV": "test"
 
 # Linux-specific packaging rules
 linux:
