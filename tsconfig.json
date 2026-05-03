@@ -9,6 +9,11 @@
         "outDir": "./dist",
         "inlineSourceMap": false,
         "declaration": true,
+        "strict": false,
+        "rootDir": "./src",
+        "types": [
+            "bun-types"
+        ]
     },
     "include": [
         "src"
