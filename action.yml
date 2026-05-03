@@ -26,10 +26,16 @@ inputs:
     required: false
     default: "false"
 
+  checkout:
+    description: "Checkout repository"
+    required: false
+    default: "true"
+
 runs:
   using: "composite"
   steps:
     - name: Checkout repository
+      if: inputs.checkout == 'true'
       uses: actions/checkout@v6
 
     - name: Determine context
@@ -82,16 +88,6 @@ runs:
       run: |
         cd $GITHUB_ACTION_PATH
         bun install
-
-    - name: List files
-      if: steps.decision.outputs.build == 'true'
-      shell: bash
-      run: |
-        echo "Local"
-        ls
-        echo "GH actions path"
-        cd $GITHUB_ACTION_PATH
-        ls
 
     - name: Run TS script with Bun
       if: steps.decision.outputs.build == 'true'
