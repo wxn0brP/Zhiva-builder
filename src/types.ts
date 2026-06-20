@@ -12,6 +12,7 @@ export interface LinuxConfig extends OsConfig {
 }
 
 export interface Config {
+    id: string;
     build: {
         cmd: string;
     };

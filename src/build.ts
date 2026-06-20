@@ -6,7 +6,7 @@ import { createArchives } from "./archive";
 import { checkEngines, getEngineFilePath } from "./engine";
 import { createFpmPackages } from "./fpm";
 import { Config, LogLevel, Os } from "./types";
-import { copyFiles, log, logError } from "./utils";
+import { copyFiles, log, logError, normalizeAppId } from "./utils";
 import { packageJson, zhivaConfig } from "./vars";
 
 export async function build(config: Config) {
@@ -46,10 +46,17 @@ async function buildBackend(config: Config) {
         process.exit(1);
     });
 
+    const appId = config.id || zhivaConfig.name;
+    if (!appId) {
+        logError("02-06", "Error building backend: app id or name is not found");
+        process.exit(1);
+    }
+
     const env = {
         ZHIVA_ROOT: "./",
         ZHIVA_ASSETS: "./assets",
-        NODE_ENV: 'production',
+        ZHIVA_APP_ID: normalizeAppId(appId + ".portable.zhiva.local"),
+        NODE_ENV: "production",
         ...(config.env || {})
     };
 

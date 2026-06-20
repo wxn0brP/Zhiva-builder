@@ -60,3 +60,10 @@ export async function copyFiles(sources: string[], destDir: string) {
         })
     );
 }
+
+export const normalizeAppId = (str: string) =>
+    str
+        .replaceAll("/", ".")
+        .replaceAll(" ", ".")
+        .replace(/\.{2,}/g, ".")
+        .replace(/^\.|\.$/g, "");

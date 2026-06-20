@@ -1,3 +1,6 @@
+# App id: organization/name
+id: wxn0brP/my-app
+
 # Command to execute before packaging
 build:
     cmd: "bun run build"
