@@ -6,116 +6,131 @@ import { Config, Format, LinuxConfig, LogLevel, Os, OsConfig } from "./types";
 import { log, logError } from "./utils";
 
 const { values } = parseArgs({
-    options: {
-        help: {
-            type: "boolean",
-            short: "h"
-        },
-        config: {
-            type: "string",
-            short: "c",
-            default: "zhiva-builder.yaml"
-        },
-        target: {
-            type: "string",
-            short: "t",
-        },
-        noArchive: {
-            type: "boolean"
-        },
-        noFpm: {
-            type: "boolean"
-        }
-    }
+	options: {
+		help: {
+			type: "boolean",
+			short: "h",
+		},
+		config: {
+			type: "string",
+			short: "c",
+			default: "zhiva-builder.yaml",
+		},
+		target: {
+			type: "string",
+			short: "t",
+		},
+		noArchive: {
+			type: "boolean",
+		},
+		noFpm: {
+			type: "boolean",
+		},
+	},
 });
 
-if (values.help)
-    await import("./help");
+if (values.help) await import("./help");
 
 log(LogLevel.INFO, "01-01", `Loading configuration from: ${values.config}`);
 
 if (!existsSync(values.config)) {
-    logError("01-02", "Config file not found");
-    process.exit(1);
+	logError("01-02", "Config file not found");
+	process.exit(1);
 }
 
-const config: Config = Bun.YAML.parse(readFileSync(values.config, "utf-8")) as any;
+const config: Config = Bun.YAML.parse(
+	readFileSync(values.config, "utf-8"),
+) as any;
 
 if (values.target) {
-    const targets = values.target.split(",");
+	const targets = values.target.split(",");
 
-    const fpmFormats = ["deb", "rpm", "pacman"];
-    const archiveFormats = ["zip", "tar.gz", "tar.xz", "7z"];
-    const systems = ["win32", "linux", "darwin"];
+	const fpmFormats = [
+		"deb",
+		"rpm",
+		"pacman",
+	];
+	const archiveFormats = [
+		"zip",
+		"tar.gz",
+		"tar.xz",
+		"7z",
+	];
+	const systems = [
+		"win32",
+		"linux",
+		"darwin",
+	];
 
-    const systemsCfg: Record<Os, (string | true)[]> = {
-        win32: [],
-        linux: [],
-        darwin: [],
-    };
+	const systemsCfg: Record<Os, (string | true)[]> = {
+		win32: [],
+		linux: [],
+		darwin: [],
+	};
 
-    const systemAliases: Record<string, Os> = {
-        win: "win32",
-        lnx: "linux",
-        mac: "darwin",
-    };
+	const systemAliases: Record<string, Os> = {
+		win: "win32",
+		lnx: "linux",
+		mac: "darwin",
+	};
 
-    for (const target of targets) {
-        // If target is a system and format, add it to that system
-        if (target.includes("-")) {
-            const [os, format] = target.split("-");
-            systemsCfg[systemAliases[os] || os].push(format);
+	for (const target of targets) {
+		// If target is a system and format, add it to that system
+		if (target.includes("-")) {
+			const [os, format] = target.split("-");
+			systemsCfg[systemAliases[os] || os].push(format);
+		} else {
+			// If target is an archive format, add it to all systems
+			if (archiveFormats.includes(target)) {
+				systemsCfg.win32.push(target);
+				systemsCfg.linux.push(target);
+				systemsCfg.darwin.push(target);
 
-        } else {
-            // If target is an archive format, add it to all systems
-            if (archiveFormats.includes(target)) {
-                systemsCfg.win32.push(target);
-                systemsCfg.linux.push(target);
-                systemsCfg.darwin.push(target);
+				// If target is an FPM format, add it to linux
+			} else if (fpmFormats.includes(target)) {
+				systemsCfg.linux.push(target);
 
-                // If target is an FPM format, add it to linux
-            } else if (fpmFormats.includes(target)) {
-                systemsCfg.linux.push(target);
+				// If target is a system, enable it
+			} else if (systems.includes(target)) {
+				systemsCfg[target].push(true);
 
-                // If target is a system, enable it
-            } else if (systems.includes(target)) {
-                systemsCfg[target].push(true);
+				// If target is an system alias, enable the aliased system
+			} else if (systemAliases[target]) {
+				systemsCfg[systemAliases[target]].push(true);
+			}
+		}
+	}
 
-                // If target is an system alias, enable the aliased system
-            } else if (systemAliases[target]) {
-                systemsCfg[systemAliases[target]].push(true);
-            }
-        }
-    }
+	for (const os in systemsCfg) {
+		const osCfg = systemsCfg[os as Os];
 
-    for (const os in systemsCfg) {
-        const osCfg = systemsCfg[os as Os];
+		if (osCfg.length === 0) {
+			delete config[os];
+			continue;
+		}
 
-        if (osCfg.length === 0) {
-            delete config[os];
-            continue;
-        }
+		if (osCfg.length === 1 && osCfg[0] === true) continue;
 
-        if (osCfg.length === 1 && osCfg[0] === true) continue;
+		const fpm = osCfg.filter(f => fpmFormats.includes(f as string)) as Format[];
+		const archive = osCfg.filter(f =>
+			archiveFormats.includes(f as string),
+		) as Format[];
 
-        const fpm = osCfg.filter((f) => fpmFormats.includes(f as string)) as Format[];
-        const archive = osCfg.filter((f) => archiveFormats.includes(f as string)) as Format[];
-
-        config[os as Os] = {
-            format: archive,
-            fpm,
-        } as OsConfig | LinuxConfig;
-    }
+		config[os as Os] = {
+			format: archive,
+			fpm,
+		} as OsConfig | LinuxConfig;
+	}
 }
 
 if (values.noArchive) {
-    log(LogLevel.INFO, "01-03", "Archive creation disabled");
-    config.noArchive = true;
+	log(LogLevel.INFO, "01-03", "Archive creation disabled");
+	config.noArchive = true;
 }
 
 if (values.noFpm) {
-    log(LogLevel.INFO, "01-04", "FPM packaging disabled");
-    config.noFpm = true;
+	log(LogLevel.INFO, "01-04", "FPM packaging disabled");
+	config.noFpm = true;
 }
 
 const { build } = await import("./build");

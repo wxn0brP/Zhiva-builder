@@ -3,47 +3,50 @@ export type Format = "zip" | "tar.gz" | "tar.xz" | "7z";
 export type FpmFormat = "deb" | "rpm" | "pacman";
 
 export interface OsConfig {
-    format: Format[];
-    cmd?: string;
+	format: Format[];
+	cmd?: string;
 }
 
 export interface LinuxConfig extends OsConfig {
-    fpm?: FpmFormat[];
+	fpm?: FpmFormat[];
 }
 
 export interface Config {
-    id: string;
-    build: {
-        cmd: string;
-    };
-    files: string[];
-    output: {
-        name: string;
-        dir: string;
-    };
-    linux: LinuxConfig;
-    win32: OsConfig;
-    darwin: OsConfig;
-    env: Record<string, string>;
+	id: string;
+	build: {
+		cmd: string;
+	};
+	files: string[];
+	output: {
+		name: string;
+		dir: string;
+	};
+	linux: LinuxConfig;
+	win32: OsConfig;
+	darwin: OsConfig;
+	env: Record<string, string>;
 
-    // internal
-    noArchive: boolean;
-    noFpm: boolean;
+	// internal
+	noArchive: boolean;
+	noFpm: boolean;
 }
 
 export interface ZhivaConfig {
-    name: string;
-    main: string;
+	name: string;
+	main: string;
 }
 
 export enum LogLevel {
-    CRITICAL = 0,
-    IMPORTANT = 1,
-    INFO = 2,
-    DEBUG = 3
+	CRITICAL = 0,
+	IMPORTANT = 1,
+	INFO = 2,
+	DEBUG = 3,
 }
 
-export type LevelConfig = Record<LogLevel, {
-    color: string;
-    emoji?: string;
-}>;
+export type LevelConfig = Record<
+	LogLevel,
+	{
+		color: string;
+		emoji?: string;
+	}
+>;

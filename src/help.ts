@@ -19,4 +19,4 @@ OPTIONS:
 console.log(helpText.trim() + "\n");
 process.exit(0);
 
-export { }
+export {};
