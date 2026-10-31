@@ -31,12 +31,32 @@ inputs:
     required: false
     default: "true"
 
+  bun-version:
+    description: "Bun version used for building"
+    required: false
+    default: "canary"
+
+  target:
+    description: "Comma-separated build targets (e.g. linux, win32, darwin)"
+    required: false
+    default: ""
+
+  publish:
+    description: "Publish release assets ('true' or 'false')"
+    required: false
+    default: "true"
+
 runs:
   using: "composite"
   steps:
     - name: Checkout repository
       if: inputs.checkout == 'true'
       uses: actions/checkout@v6
+
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: ${{ inputs.bun-version }}
 
     - name: Determine context
       id: context
@@ -86,17 +106,25 @@ runs:
       if: steps.decision.outputs.build == 'true'
       shell: bash
       run: |
-        cd $GITHUB_ACTION_PATH
+        cd "$GITHUB_ACTION_PATH"
         bun install
 
     - name: Run TS script with Bun
       if: steps.decision.outputs.build == 'true'
       shell: bash
       id: zhiva-builder
-      run: bun $GITHUB_ACTION_PATH/src/index.ts -c ${{ inputs.config }}
+      env:
+        CONFIG: ${{ inputs.config }}
+        TARGET: ${{ inputs.target }}
+      run: |
+        args=(-c "$CONFIG")
+        if [[ -n "$TARGET" ]]; then
+          args+=(-t "$TARGET")
+        fi
+        bun "$GITHUB_ACTION_PATH/src/index.ts" "${args[@]}"
 
     - name: Create or update release
-      if: steps.decision.outputs.build == 'true'
+      if: inputs.publish == 'true' && steps.decision.outputs.build == 'true'
       shell: bash
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN || github.token }}

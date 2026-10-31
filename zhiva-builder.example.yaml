@@ -21,6 +21,21 @@ output:
 env:
     "TEST_ENV": "test"
 
+# Standalone executable options (all size reductions are on by default)
+compile:
+    # Remove unused Bun and Node.js APIs from the binary
+    trim: true
+    # Or keep only selected ICU locales and APIs:
+    # trim:
+    #     locales: ["en", "pl"]
+    #     allow: ["sqlite"]
+    # Compile JS/TS to machine code at build time (host platform only)
+    aot: true
+    # Drop function source code from AOT binaries
+    functionSource: false
+    # Strip function and file names, source maps are removed after build
+    obfuscate: true
+
 # Linux-specific packaging rules
 linux:
     # Compressed archive formats to generate
@@ -39,8 +54,10 @@ linux:
 win32:
     format:
         - "zip"
+    # arch: "x64"
 
 # macOS-specific packaging rules
 darwin:
     format:
         - "zip"
+    # arch: "arm64"

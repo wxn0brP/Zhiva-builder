@@ -16,16 +16,19 @@ export function createArchive(
 
 	switch (type) {
 		case "zip":
-			cmd = `zip -rq ${out} ${appName}`;
+			cmd =
+				process.platform === "win32"
+					? `7z a -tzip "${out}" "${appName}"`
+					: `zip -rq "${out}" "${appName}"`;
 			break;
 		case "tar.gz":
-			cmd = `tar -zcvf ${out} ${appName}`;
+			cmd = `tar -zcvf "${out}" "${appName}"`;
 			break;
 		case "tar.xz":
-			cmd = `tar -Jcvf ${out} ${appName}`;
+			cmd = `tar -Jcvf "${out}" "${appName}"`;
 			break;
 		case "7z":
-			cmd = `7z a ${out} ${appName}`;
+			cmd = `7z a "${out}" "${appName}"`;
 			break;
 	}
 

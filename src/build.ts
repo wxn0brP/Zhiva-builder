@@ -1,11 +1,17 @@
 import { type Build } from "bun";
-import { execSync } from "child_process";
-import { copyFileSync, writeFileSync } from "fs";
+import { execFileSync, execSync } from "child_process";
+import {
+	copyFileSync,
+	existsSync,
+	statSync,
+	unlinkSync,
+	writeFileSync,
+} from "fs";
 import { join } from "path";
 import { createArchives } from "./archive";
 import { checkEngines, getEngineFilePath } from "./engine";
 import { createFpmPackages } from "./fpm";
-import { Config, LogLevel, Os } from "./types";
+import { Arch, CompileConfig, Config, LogLevel, Os } from "./types";
 import { copyFiles, log, logError, normalizeAppId } from "./utils";
 import { packageJson, zhivaConfig } from "./vars";
 
@@ -116,22 +122,113 @@ async function buildForSystem(config: Config, os: Os) {
 	log(LogLevel.CRITICAL, "02-11", `Build for ${os} completed`);
 }
 
-const binExt = {
+const binExt: Record<Os, string> = {
 	win32: ".exe",
 	darwin: "-macos",
 	linux: ".x86_64",
 };
 
-const binTarget: Record<Os, Build.CompileTarget> = {
-	win32: "bun-windows-x64",
-	darwin: "bun-darwin-x64",
-	linux: "bun-linux-x64",
+const defaultArch: Record<Os, Arch> = {
+	win32: "x64",
+	darwin: "arm64",
+	linux: "x64",
 };
 
-async function buildBin(config: Config, tempDir: string, os: Os) {
-	let bin = join(tempDir, zhivaConfig.name.replace(" ", "-") + binExt[os]);
+function getBinExt(os: Os, arch: Arch) {
+	if (os === "linux" && arch !== "x64") return `-linux-${arch}`;
+	return binExt[os];
+}
 
-	log(LogLevel.INFO, "02-09", `Building binary for ${os}: ${bin}`);
+const hostOs: Os | null =
+	process.platform === "win32"
+		? "win32"
+		: process.platform === "darwin"
+			? "darwin"
+			: process.platform === "linux"
+				? "linux"
+				: null;
+
+const hostArch: Arch | null =
+	process.arch === "x64" || process.arch === "arm64" ? process.arch : null;
+
+let buildHelp: string | undefined;
+
+function bunBuildSupports(flag: string) {
+	buildHelp ??= execFileSync(
+		process.execPath,
+		[
+			"build",
+			"--help",
+		],
+		{
+			encoding: "utf-8",
+		},
+	);
+	return buildHelp.includes(flag);
+}
+
+function getCompileOptions(
+	config: CompileConfig | undefined,
+	os: Os,
+	arch: Arch,
+) {
+	const options: Record<string, unknown> = {};
+	const cfg = config ?? {};
+	const isHostTarget = os === hostOs && arch === hostArch;
+
+	const trim = cfg.trim ?? true;
+	const aot = cfg.aot ?? true;
+
+	if (!isHostTarget) {
+		const skipped = [
+			trim ? "trim" : null,
+			aot ? "aot" : null,
+		].filter(Boolean);
+
+		if (skipped.length)
+			log(
+				LogLevel.IMPORTANT,
+				"02-13",
+				`${skipped.join(" and ")} only available for the host target (${hostOs}/${hostArch}), skipping for ${os}/${arch}`,
+			);
+	}
+
+	if (trim && isHostTarget) {
+		if (!bunBuildSupports("--trim"))
+			log(
+				LogLevel.IMPORTANT,
+				"02-12",
+				"Compile trim requires Bun canary, ignoring (current Bun does not support --trim)",
+			);
+		else options.trim = trim;
+	}
+
+	if (aot && isHostTarget) {
+		if (!bunBuildSupports("--aot")) {
+			log(
+				LogLevel.IMPORTANT,
+				"02-14",
+				"AOT compiling requires Bun canary, ignoring (current Bun does not support --aot)",
+			);
+		} else {
+			options.aot = true;
+			options.functionSource = cfg.functionSource ?? false;
+			options.obfuscate = cfg.obfuscate ?? true;
+		}
+	}
+
+	return options;
+}
+
+async function buildBin(config: Config, tempDir: string, os: Os) {
+	const arch = config[os].arch ?? defaultArch[os];
+	const target = `bun-${os}-${arch}` as Build.CompileTarget;
+	const bin = join(
+		tempDir,
+		zhivaConfig.name.replace(" ", "-") + getBinExt(os, arch),
+	);
+
+	log(LogLevel.INFO, "02-09", `Building binary for ${os}/${arch}: ${bin}`);
 
 	await Bun.build({
 		entrypoints: [
@@ -139,12 +236,29 @@ async function buildBin(config: Config, tempDir: string, os: Os) {
 		],
 		compile: {
 			outfile: bin,
-			target: binTarget[os],
-		},
+			target,
+			...getCompileOptions(config.compile, os, arch),
+		} as Bun.CompileBuildOptions,
 	}).catch(e => {
 		logError("02-09", `Error building binary for ${os}:`, e);
 		process.exit(1);
 	});
 
-	log(LogLevel.INFO, "02-10", `Binary built successfully: ${bin}`);
+	for (const ext of [
+		".map",
+		".map.js",
+	]) {
+		const map = bin + ext;
+		if (existsSync(map)) {
+			unlinkSync(map);
+			log(LogLevel.DEBUG, "02-16", `Removed source map: ${map}`);
+		}
+	}
+
+	const size = statSync(bin).size;
+	log(
+		LogLevel.INFO,
+		"02-15",
+		`Binary built successfully: ${bin} (${(size / 1024 / 1024).toFixed(1)} MB)`,
+	);
 }
