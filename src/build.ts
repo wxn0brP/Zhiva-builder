@@ -80,6 +80,44 @@ import(i);`,
 	log(LogLevel.CRITICAL, "02-06", "Backend built successfully");
 }
 
+async function copyAssets(config: Config, tempDir: string) {
+	const assets = config.assets ?? true;
+
+	if (assets === false) {
+		log(LogLevel.INFO, "02-17", "Copying zhiva-base-lib assets disabled");
+		return;
+	}
+
+	const assetsDir = join(
+		"node_modules",
+		"@wxn0brp",
+		"zhiva-base-lib",
+		"assets",
+	);
+
+	if (!existsSync(assetsDir)) {
+		log(
+			LogLevel.IMPORTANT,
+			"02-18",
+			`Assets directory not found, skipping: ${assetsDir}`,
+		);
+		return;
+	}
+
+	const sources = Array.isArray(assets)
+		? assets.map(entry => `${join(assetsDir, entry)}:${join("assets", entry)}`)
+		: [
+				`${assetsDir}:assets`,
+			];
+
+	if (sources.length === 0) {
+		log(LogLevel.INFO, "02-17", "No zhiva-base-lib assets selected");
+		return;
+	}
+
+	await copyFiles(sources, tempDir);
+}
+
 async function buildForSystem(config: Config, os: Os) {
 	log(LogLevel.CRITICAL, "02-07", `Building for ${os}...`);
 
@@ -87,12 +125,7 @@ async function buildForSystem(config: Config, os: Os) {
 
 	log(LogLevel.DEBUG, "02-08", `Copying files to ${tempDir}`);
 	await copyFiles(config.files, tempDir);
-	await copyFiles(
-		[
-			join("node_modules", "@wxn0brp", "zhiva-base-lib", "assets") + ":assets",
-		],
-		tempDir,
-	);
+	await copyAssets(config, tempDir);
 	copyFileSync(
 		join(config.output.dir, "zhiva-index.js"),
 		join(tempDir, "zhiva-index.js"),

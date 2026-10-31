@@ -26,6 +26,9 @@ const { values } = parseArgs({
 		noFpm: {
 			type: "boolean",
 		},
+		noAssets: {
+			type: "boolean",
+		},
 	},
 });
 
@@ -131,6 +134,11 @@ if (values.noArchive) {
 if (values.noFpm) {
 	log(LogLevel.INFO, "01-04", "FPM packaging disabled");
 	config.noFpm = true;
+}
+
+if (values.noAssets) {
+	log(LogLevel.INFO, "01-05", "Asset copying disabled");
+	config.assets = false;
 }
 
 const { build } = await import("./build");

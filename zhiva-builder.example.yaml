@@ -12,6 +12,15 @@ files:
     - "zhiva.json"
     - "README.md"
 
+# Copy zhiva-base-lib assets into every build (default: true)
+assets: true
+# Or skip them entirely:
+# assets: false
+# Or copy only selected entries (relative to the assets directory):
+# assets:
+#     - "app.css"
+#     - "fonts"
+
 # Output configuration for the generated release files
 output:
     name: "my-app-release"

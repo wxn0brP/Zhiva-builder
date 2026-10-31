@@ -14,6 +14,7 @@ OPTIONS:
                           Combined targets: <system>-<format> (e.g. lnx-deb, win-zip)
   --no-archive            Skip archive creation, keep unpacked build
   --no-fpm                Skip FPM packaging (deb, rpm, pacman)
+  --no-assets             Skip copying zhiva-base-lib assets
 `;
 
 console.log(helpText.trim() + "\n");

@@ -25,6 +25,22 @@
 			},
 			"$comment": "Files/directories copied to the distribution; use \"src:dest\" to rename"
 		},
+		"assets": {
+			"oneOf": [
+				{
+					"type": "boolean"
+				},
+				{
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"uniqueItems": true,
+					"$comment": "Only these entries from zhiva-base-lib assets, relative to the assets directory"
+				}
+			],
+			"$comment": "Copy zhiva-base-lib assets: true = all (default), false = none, array = only listed"
+		},
 		"output": {
 			"type": "object",
 			"properties": {

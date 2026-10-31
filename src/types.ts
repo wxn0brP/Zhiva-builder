@@ -25,6 +25,8 @@ export interface CompileConfig {
 	obfuscate?: boolean;
 }
 
+export type AssetsConfig = boolean | string[];
+
 export interface Config {
 	id: string;
 	build: {
@@ -40,6 +42,7 @@ export interface Config {
 	darwin: OsConfig;
 	env: Record<string, string>;
 	compile: CompileConfig;
+	assets: AssetsConfig;
 
 	// internal
 	noArchive: boolean;
