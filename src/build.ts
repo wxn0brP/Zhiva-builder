@@ -62,7 +62,7 @@ async function buildBackend(config: Config) {
 	const env = {
 		ZHIVA_ROOT: "./",
 		ZHIVA_ASSETS: "./assets",
-		ZHIVA_APP_ID: normalizeAppId(appId + ".portable.zhiva.local"),
+		ZHIVA_APP_ID: normalizeAppId(appId + ".portable.zhiva-runtime.local"),
 		NODE_ENV: "production",
 		...(config.env || {}),
 	};
