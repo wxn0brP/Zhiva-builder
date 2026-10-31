@@ -1,0 +1,194 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "ZhivaBuilderConfig",
+	"type": "object",
+	"properties": {
+		"id": {
+			"type": "string",
+			"$comment": "App id in organization/name format (default: name from zhiva.json)"
+		},
+		"build": {
+			"type": "object",
+			"properties": {
+				"cmd": {
+					"type": "string",
+					"$comment": "Command executed before packaging"
+				}
+			},
+			"additionalProperties": false,
+			"$comment": "Build step configuration"
+		},
+		"files": {
+			"type": "array",
+			"items": {
+				"type": "string"
+			},
+			"$comment": "Files/directories copied to the distribution; use \"src:dest\" to rename"
+		},
+		"output": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string",
+					"$comment": "Base name for generated binaries and archives"
+				},
+				"dir": {
+					"type": "string",
+					"$comment": "Output directory"
+				}
+			},
+			"required": [
+				"name",
+				"dir"
+			],
+			"additionalProperties": false,
+			"$comment": "Output configuration for the generated release files"
+		},
+		"env": {
+			"type": "object",
+			"additionalProperties": {
+				"type": "string"
+			},
+			"$comment": "Environment variables passed to the process"
+		},
+		"compile": {
+			"type": "object",
+			"properties": {
+				"trim": {
+					"oneOf": [
+						{
+							"type": "boolean"
+						},
+						{
+							"type": "object",
+							"properties": {
+								"locales": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"uniqueItems": true,
+									"$comment": "ICU locales to keep"
+								},
+								"allow": {
+									"type": "array",
+									"items": {
+										"type": "string"
+									},
+									"uniqueItems": true,
+									"$comment": "Bun/Node.js APIs to keep"
+								}
+							},
+							"additionalProperties": false,
+							"$comment": "Selective trimming: keep only the listed locales and APIs"
+						}
+					],
+					"$comment": "Remove unused Bun and Node.js APIs (default: true, host target only)"
+				},
+				"aot": {
+					"type": "boolean",
+					"$comment": "Compile JS/TS to machine code at build time (default: true, host target only)"
+				},
+				"functionSource": {
+					"type": "boolean",
+					"$comment": "Keep function source code in AOT binaries (default: false)"
+				},
+				"obfuscate": {
+					"type": "boolean",
+					"$comment": "Strip function and file names (default: true)"
+				}
+			},
+			"additionalProperties": false,
+			"$comment": "Standalone executable options"
+		},
+		"linux": {
+			"type": "object",
+			"properties": {
+				"format": {
+					"$ref": "#/definitions/formats"
+				},
+				"cmd": {
+					"type": "string",
+					"$comment": "Command executed before packaging this system"
+				},
+				"arch": {
+					"$ref": "#/definitions/arch"
+				},
+				"fpm": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"enum": [
+							"deb",
+							"rpm",
+							"pacman"
+						]
+					},
+					"uniqueItems": true,
+					"$comment": "System package formats to build via FPM"
+				}
+			},
+			"required": [
+				"format"
+			],
+			"additionalProperties": false,
+			"$comment": "Linux-specific packaging rules"
+		},
+		"win32": {
+			"$ref": "#/definitions/osConfig"
+		},
+		"darwin": {
+			"$ref": "#/definitions/osConfig"
+		}
+	},
+	"required": [
+		"build",
+		"files",
+		"output"
+	],
+	"additionalProperties": false,
+	"definitions": {
+		"arch": {
+			"type": "string",
+			"enum": [
+				"x64",
+				"arm64"
+			],
+			"$comment": "Target architecture (default: x64, darwin: arm64)"
+		},
+		"formats": {
+			"type": "array",
+			"items": {
+				"type": "string",
+				"enum": [
+					"zip",
+					"tar.gz",
+					"tar.xz",
+					"7z"
+				]
+			},
+			"uniqueItems": true,
+			"$comment": "Compressed archive formats to generate"
+		},
+		"osConfig": {
+			"type": "object",
+			"properties": {
+				"format": {
+					"$ref": "#/definitions/formats"
+				},
+				"cmd": {
+					"type": "string",
+					"$comment": "Command executed before packaging this system"
+				},
+				"arch": {
+					"$ref": "#/definitions/arch"
+				}
+			},
+			"required": [
+				"format"
+			],
+			"additionalProperties": false,
+			"$comment": "OS-specific packaging rules"
+		}
+	}
+}

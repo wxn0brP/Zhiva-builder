@@ -29,7 +29,19 @@ bun install
 
 ## Config
 
-See `zhiva-builder.example.json` for configuration example.
+See `zhiva-builder.example.yaml` for configuration example.
+
+The configuration schema is available in [`schema.json`](./schema.json).
+
+### VSC Lint
+
+```json
+"yaml.schemas": {
+    "https://raw.githubusercontent.com/wxn0brP/Zhiva-builder/refs/heads/master/schema.json": [
+        "zhiva-builder.yaml"
+    ]
+}
+```
 
 ## License
 
